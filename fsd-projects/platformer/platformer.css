@@ -1,6 +1,6 @@
 body {
   margin: 0px;
-  background-color: #202737;
+  background-color: #f8f7f7;
   min-height: 100vh;
   display: flex;
   justify-content: center;
@@ -8,10 +8,13 @@ body {
 }
 
 canvas {
-  background-color: lightblue;
+  background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRHsKev8Y566kRDKHSpXRA06mkJe4nKQIxpbipqWMiaavYFWihdKbW4kBhs:https://isaacle.net/_next/static/media/backgroundImg.d0ea9b5e.png&s=10");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
   margin: 20px;
   border-radius: 15px;
-  border: 5px solid rgba(118, 0, 233, 0.375);
+  border: 5px solid rgba(0, 0, 0, 0.375);
 }
 
 img {

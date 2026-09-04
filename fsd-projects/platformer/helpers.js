@@ -113,21 +113,18 @@ function changeAnimationType() {
         currentAnimationType = animationTypes.walk;
       }
     } else if (player.onGround) {
-      if (keyPress.down) {
-        currentAnimationType = animationTypes.duck;
-        if (duckTimer < DUCK_COUNTER_IDLE_VALUE) {
-          // not using index 0 because the animation is too slow then
-          frameIndex = 3;
-          duckTimer = DUCK_COUNTER_IDLE_VALUE * 2 - frameIndex;
-        }
-      } else if (
-        duckTimer === 0 ||
-        currentAnimationType === animationTypes.walk
-      ) {
-        currentAnimationType = animationTypes.frontIdle;
-      }
+      currentAnimationType = animationTypes.frontIdle;
     }
   }
+}
+
+function playDeathSound() {
+  if (deathSoundPlayed) {
+    return;
+  }
+  deathSoundPlayed = true;
+  deathSound.currentTime = 0;
+  deathSound.play();
 }
 
 function debug() {
@@ -161,18 +158,7 @@ function debug() {
 }
 
 function animate() {
-  if (
-    !(
-      keyPress.down &&
-      duckTimer === DUCK_COUNTER_IDLE_VALUE &&
-      currentAnimationType === animationTypes.duck
-    )
-  ) {
-    frameIndex = frameIndex + 15 / frameRate;
-    if (duckTimer > 0) {
-      duckTimer -= 0.25;
-    }
-  }
+  frameIndex = frameIndex + 15 / frameRate;
   changeAnimationType();
   if (frameIndex >= animationDetails[currentAnimationType].coordinates.length) {
     frameIndex = 0;
@@ -223,6 +209,81 @@ function drawRobot() {
     return; //return stops the function, we don't want to draw the robot after we die
   }
 
+  if (currentAnimationType === animationTypes.frontDeath) {
+    const deathHeight = hitBoxHeight;
+    const deathWidth = deathHeight * (125 / 94);
+    const deathX = player.x + hitBoxWidth / 2 - deathWidth / 2;
+    ctx.drawImage(deathPlayerImage, deathX, player.y, deathWidth, deathHeight);
+    return;
+  }
+
+  if (currentAnimationType === animationTypes.jump) {
+    const jumpHeight = 106 * playerScale;
+    const jumpWidth = jumpHeight * (86 / 94);
+    ctx.drawImage(
+      jumpPlayerImage,
+      player.x - hitDx,
+      player.y - hitDy,
+      jumpWidth,
+      jumpHeight,
+    );
+    return;
+  }
+
+  if (currentAnimationType === animationTypes.frontIdle) {
+    const standingWidth = player.height * (764 / 896);
+    ctx.drawImage(
+      standingPlayerImage,
+      player.x - hitDx,
+      player.y - hitDy,
+      standingWidth,
+      player.height,
+    );
+    return;
+  }
+
+  if (
+    currentAnimationType === animationTypes.run ||
+    currentAnimationType === animationTypes.walk
+  ) {
+    const walkingHeight = hitBoxHeight;
+    const walkingWidth = walkingHeight * (417 / 498);
+    const walkingX = player.x - 16;
+    const walkingY = player.y;
+    const walkingFrame = walkingFrameIndex;
+    walkingFrameIndex = (walkingFrameIndex + 1) % 23;
+
+    if (player.facingRight) {
+      ctx.drawImage(
+        walkingPlayerImage,
+        walkingFrame * 417,
+        0,
+        417,
+        498,
+        walkingX,
+        walkingY,
+        walkingWidth,
+        walkingHeight,
+      );
+    } else {
+      ctx.save();
+      ctx.scale(-1, 1);
+      ctx.drawImage(
+        walkingPlayerImage,
+        walkingFrame * 417,
+        0,
+        417,
+        498,
+        -walkingX - walkingWidth,
+        walkingY,
+        walkingWidth,
+        walkingHeight,
+      );
+      ctx.restore();
+    }
+    return;
+  }
+
   if (player.facingRight) {
     ctx.drawImage(
       halleImage,
@@ -233,7 +294,7 @@ function drawRobot() {
       player.x - hitDx,
       player.y - hitDy,
       player.width,
-      player.height
+      player.height,
     );
   } else {
     //for running to the left you mirror the image
@@ -248,7 +309,7 @@ function drawRobot() {
       -player.x - player.width + hitDx,
       player.y - hitDy,
       player.width,
-      player.height
+      player.height,
     );
     ctx.restore(); //put the canvas back to normal
   }
@@ -270,7 +331,7 @@ function collision() {
         platforms[i].x,
         platforms[i].y,
         platforms[i].width,
-        platforms[i].height
+        platforms[i].height,
       );
     }
   }
@@ -364,6 +425,7 @@ function projectileCollision() {
       projectiles[i].y < player.y + hitBoxHeight &&
       projectiles[i].y + projectiles[i].height > player.y
     ) {
+      playDeathSound();
       currentAnimationType = animationTypes.frontDeath;
       frameIndex = 0;
     }
@@ -381,6 +443,7 @@ function badPlatformCollision() {
       player.y < badPlatforms[i].y + badPlatforms[i].height &&
       player.y + hitBoxHeight > badPlatforms[i].y
     ) {
+      playDeathSound();
       currentAnimationType = animationTypes.frontDeath;
       frameIndex = 0;
     }
@@ -393,7 +456,7 @@ function deathOfPlayer() {
     canvas.width / 4,
     canvas.height / 6,
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2,
   );
   ctx.fillStyle = "black";
   ctx.font = "800% serif";
@@ -401,14 +464,14 @@ function deathOfPlayer() {
     "You are dead",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 5,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   ctx.font = "500% serif";
   ctx.fillText(
     "Hit any key to restart",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 3,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   if (keyPress.any) {
     keyPress.any = false;
@@ -509,7 +572,7 @@ function makeGrid() {
     ctx.fillText(
       i, // text
       i - 15, // x location
-      25 // y location
+      25, // y location
     );
   }
 
@@ -523,7 +586,7 @@ function makeGrid() {
     ctx.fillText(
       i, // text
       10, // x location
-      i + 5 // y location
+      i + 5, // y location
     );
   }
   gridMade = true;
@@ -536,7 +599,7 @@ function drawProjectiles() {
       projectiles[i].x,
       projectiles[i].y,
       projectiles[i].width,
-      projectiles[i].height
+      projectiles[i].height,
     );
     projectiles[i].x = projectiles[i].x + projectiles[i].speedX;
     projectiles[i].y = projectiles[i].y + projectiles[i].speedY;
@@ -552,7 +615,7 @@ function drawCannons() {
         cannons[i].x,
         cannons[i].y,
         cannons[i].projectileWidth,
-        cannons[i].projectileHeight
+        cannons[i].projectileHeight,
       );
     } else {
       cannons[i].projectileCountdown = cannons[i].projectileCountdown + 1;
@@ -574,13 +637,25 @@ function drawCannons() {
     }
 
     ctx.fillStyle = "grey";
-    ctx.save(); //save the current translation of the screen.
-    ctx.translate(cannons[i].x, cannons[i].y); //you are moving the top left of the screen to the pictures location, this is because you can't rotate the image, you have to rotate the whole page
-    ctx.rotate((cannons[i].rotation * Math.PI) / 180); //then you rotate. rotation is centered on 0,0 on the canvas, which is why we moved the picture to 0,0 with translate(x,y)
-    ctx.drawImage(cannonImage, 0, 0, cannonWidth, cannonHeight); //you draw the image on the rotated canvas. as of this line, the picture is straight and the rest of the page is rotated
-    //also the previous line uses -width / 2 so that the picture is centered. This will mean that (0,0) is at the exact center of the image
-    ctx.translate(-cannons[i].x, -cannons[i].y); //the reverse of the previous translate, this moves the page back to the correct place so that the image is no longer at (0,0)
-    ctx.restore(); //this unrotates the canvas so the canvas is straight, but now since you did that the picture looks rotated
+    let cannonImageX = cannons[i].x;
+    let cannonImageY = cannons[i].y;
+
+    if (cannons[i].location === "top") {
+      cannonImageX -= cannonWidth;
+      cannonImageY -= cannonHeight;
+    } else if (cannons[i].location === "left") {
+      cannonImageX -= cannonHeight;
+    } else if (cannons[i].location === "right") {
+      cannonImageY -= cannonWidth;
+    }
+
+    ctx.drawImage(
+      cannonImage,
+      cannonImageX,
+      cannonImageY,
+      cannonWidth,
+      cannonHeight,
+    );
   }
 }
 
@@ -593,7 +668,7 @@ function drawCollectables() {
         collectables[i].x,
         collectables[i].y,
         collectableWidth,
-        collectableHeight
+        collectableHeight,
       );
     } else {
       //draw the icons at the top if collected
@@ -606,7 +681,7 @@ function drawCollectables() {
         200 + 100 * i,
         10,
         collectableWidth,
-        collectableHeight
+        collectableHeight,
       );
       ctx.globalAlpha = 1;
     }
@@ -679,7 +754,7 @@ function winGame() {
     canvas.width / 4,
     canvas.height / 6,
     canvas.width / 2,
-    canvas.height / 2
+    canvas.height / 2,
   );
   ctx.fillStyle = "white";
   ctx.font = "800% serif";
@@ -687,14 +762,14 @@ function winGame() {
     "You Win!",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 5,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   ctx.font = "500% serif";
   ctx.fillText(
     "Hit any key to restart",
     canvas.width / 4,
     canvas.height / 6 + canvas.height / 3,
-    (canvas.width / 16) * 14
+    (canvas.width / 16) * 14,
   );
   if (keyPress.any) {
     keyPress.any = false;
@@ -713,7 +788,7 @@ function createPlatform(
   speedX = 1,
   minY = null,
   maxY = null,
-  speedY = 1
+  speedY = 1,
 ) {
   platforms.push({
     x,
@@ -760,7 +835,7 @@ function createCannon(
   height = defaultProjectileHeight,
   minPos = null,
   maxPos = null,
-  speed = 1
+  speed = 1,
 ) {
   if (wallLocation === "top") {
     cannons.push({
@@ -841,7 +916,7 @@ function createCollectable(
   bounce = 1,
   minX = null,
   maxX = null,
-  speed = 1
+  speed = 1,
 ) {
   if (type !== "") {
     var image = document.createElement("img");
@@ -950,7 +1025,6 @@ function handleKeyDown(e) {
     keyPress.left = true;
   }
   if (e.key === "ArrowDown" || e.key === "s") {
-    keyPress.down = true;
   }
   if (e.key === "ArrowRight" || e.key === "d") {
     keyPress.right = true;
@@ -968,11 +1042,6 @@ function handleKeyUp(e) {
     keyPress.left = false;
   }
   if (e.key === "ArrowDown" || e.key === "s") {
-    keyPress.down = false;
-    if (currentAnimationType === animationTypes.duck) {
-      duckTimer = 8;
-      frameIndex = 20;
-    }
   }
   if (e.key === "ArrowRight" || e.key === "d") {
     keyPress.right = false;

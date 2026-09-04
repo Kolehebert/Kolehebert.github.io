@@ -19,7 +19,7 @@ const playerScale = 0.8; //makes the player just a bit smaller. Doesn't affect t
 // Player variables
 const player = {
   x: 50,
-  y: 100,
+  y: 90,
   speedX: 0,
   speedY: 0,
   width: undefined,
@@ -40,14 +40,12 @@ const keyPress = {
   any: false,
   up: false,
   left: false,
-  down: false,
   right: false,
   space: false,
 };
 
 // Player animation variables
 const animationTypes = {
-  duck: "duck",
   flyingJump: "flying-jump",
   frontDeath: "front-death",
   frontIdle: "front-idle",
@@ -59,9 +57,8 @@ const animationTypes = {
 };
 let currentAnimationType = animationTypes.run;
 let frameIndex = 0;
+let walkingFrameIndex = 0;
 let jumpTimer = 0;
-let duckTimer = 0;
-let DUCK_COUNTER_IDLE_VALUE = 14;
 let debugVar = false;
 
 let spriteHeight = 0;
@@ -93,6 +90,12 @@ let ctx;
 let setup;
 
 let halleImage;
+let walkingPlayerImage;
+let standingPlayerImage;
+let jumpPlayerImage;
+let deathPlayerImage;
+let deathSound;
+let deathSoundPlayed = false;
 let animationDetails = {};
 
 var collectableList = {
