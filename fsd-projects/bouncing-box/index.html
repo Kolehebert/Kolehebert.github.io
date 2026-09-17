@@ -42,6 +42,7 @@
         var box = jQuery(".box"); // reference to the HTML .box element
         var board = jQuery(".board"); // reference to the HTML .board element
         var boardWidth = board.width(); // the maximum X-Coordinate of the screen
+        
 
         // update the boardWidth variable when the window is resized
         jQuery(window).on("resize", function () {
@@ -72,7 +73,9 @@
 
 
 
-
+var positionX = 0;
+var points = 0;
+var speed = 3;
 
         /**
          * This Function will be called 20 times/second.
@@ -80,12 +83,19 @@
          * If the box drifts off the screen, turn it around!
          */
         function update() {
+          moveBoxTo(positionX);
+positionX += speed;   
 
+if (positionX >= boardWidth - box.width()) {
+  speed *= -1;
+}
+if (positionX <= 0) {
+  speed = speed *-1;
+}
+
+      }
         
-
-          
-        }
-
+        
         /**
          * This Function will be called each time the box is clicked.
          * Each time it is called, it should perform each of the following actions:
@@ -93,9 +103,11 @@
          * - increase the speed
          * - move the box to the left side of the screen.
          */
-        function handleBoxClick() {
-
-
+      function handleBoxClick() {
+      positionX = 0;
+changeBoxText(points)
+++points;
+ speed += 3;
 
 
         }
